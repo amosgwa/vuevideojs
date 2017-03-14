@@ -6,17 +6,36 @@ var videoController = Vue.extend({
       currentTime_m_s: "00:00",
       duration_m_s: "00:00",
       scrubPosition: "0",
+      play_button_txt: "play",
       currentTime_s: 0,
-      vid_idx: 0
+      video_src: this.getVideoSrc()
     }
   },
-  props: ['curr_idx', 'play_button'],
+  props: ['curr_idx', 'player'],
   template: '#video-controller',
   ready() {
-    console.log('video controller ready', this.player)
+
   },
   methods: {
-    //play: this.player.play
+    togglePlay() {
+      if (this.player.isPaused()) {
+        this.player.play()
+        this.play_button_txt = "Pause"
+      } else {
+        this.player.pause()
+        this.play_button_txt = "Play"
+      }
+    },
+    getVideoSrc() {
+      return this.player.getSourceFromIdx(this.curr_idx).src
+    }
+  },
+  watch: {
+    curr_idx() {
+      // The video has ended, and src has changed to a new one.
+      console.log("source has changed", this.curr_idx)
+      this.video_src = this.getVideoSrc()
+    }
   }
 })
 
@@ -24,52 +43,55 @@ var videoPlayer = Vue.extend({
   data() {
     return {
       currIndex: 0,
-      play_button_text: "Play"
+      player: {
+        play: this.play,
+        pause: this.pause,
+        isPaused: this.isPaused,
+        getSourceFromIdx: this.getSourceFromIdx
+      }
     }
   },
-  props : ['source', 'vs', 'firstvideo'],
+  props: ['source', 'vs', 'firstvideo'],
   template: `<video 
         muted
         controls
-        id='{{source.id}}' 
+        :id='source.id' 
         class='video-js vjs-big-play-centered' 
-        width='{{vs.videoWidth}}'
-        height='{{vs.videoHeight}}' 
+        :width='vs.videoWidth'
+        :height='vs.videoHeight' 
         data-setup='{ }'>
-          <source src='{{firstvideo.src}}' type='{{firstvideo.type}}'>
+          <source :src='firstvideo.src' :type='firstvideo.type'>
       </video>
-      <video-controller :curr_idx='currIndex' :play_button='play_button_text'></video-player>
+      <video-controller :curr_idx='currIndex' :player='player' ></video-player>
       `,
   beforeCompile() {
-   
+
   },
   ready() {
     // Create a videojs instance
-    console.log("id",this.source.id)
+    //console.log("id",this.source.id)
     this.videoPlayer = videojs("main-video")
-    //this.play(0, 20)
+
+    this.play(0, 29)
   },
-  methods : {
+  methods: {
     play(idx, videoTime) {
-      if(idx != undefined && videoTime != undefined){
+      var self = this
+      if (idx != undefined && videoTime != undefined) {
         this.videoPlayer.pause()
         this.videoPlayer.src(this.source.videos[idx])
         this.videoPlayer.currentTime(videoTime)
       }
       this.videoPlayer.play()
-      this.play_button_text = "Pause"
     },
     pause() {
       this.videoPlayer.pause()
     },
-    playToggle() {
-      if(this.currPlayer.paused()){
-        this.currPlayer.play()
-        this.play_button_text = "Pause"
-      } else {
-        this.currPlayer.pause()
-        this.play_button_text = "Play"
-      }   
+    isPaused() {
+      return this.videoPlayer.paused()
+    },
+    getSourceFromIdx(idx) {
+      return this.source.videos[idx]
     }
   },
   components: {
@@ -110,14 +132,14 @@ new Vue({
     this.calculateTimeRange()
     // Set the first video.
     this.firstvideo = this.source.videos[0]
-    console.log(this.firstvideo)
+    //console.log(this.firstvideo)
   },
   methods: {
     calculateTimeRange() {
       var prev_duration = 0
       // Calculate the start and end of all the videos.
-      for(var i = 0; i < this.source.videos.length; i++) {
-        this.videosetting.totalDuration += this.source.videos[i].duration 
+      for (var i = 0; i < this.source.videos.length; i++) {
+        this.videosetting.totalDuration += this.source.videos[i].duration
         this.source.videos[i].start = prev_duration + (1 && (i != 0))
         this.source.videos[i].end = prev_duration + this.source.videos[i].duration
         prev_duration = this.videosetting.totalDuration
