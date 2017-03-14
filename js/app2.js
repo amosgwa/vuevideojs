@@ -24,7 +24,7 @@ var videoPlayer = Vue.extend({
     // Create a videojs instance
     console.log("id",this.source.id)
     this.videoPlayer = videojs("main-video")
-    this.play(0, 30)
+    this.play(0, 20)
   },
   methods : {
     play(idx, videoTime) {
@@ -36,7 +36,7 @@ var videoPlayer = Vue.extend({
       this.videoPlayer.play()
     },
     pause() {
-
+      this.videoPlayer.pause()
     }
   }
 })
