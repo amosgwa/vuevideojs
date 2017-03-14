@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <script type="text/javascript" src="./js/vue.js"></script>
+        <script type="text/javascript" src="./js/video.js"></script>
+        <script type="text/javascript" src="./js/videojs-contrib-hls.min.js"></script>
+        <script type="text/javascript" src="./js/Youtube.js"></script>
+        <link rel="stylesheet" href="./css/style.css">
+        <link rel="stylesheet" href="./css/video-js.css">
+    </head>
+    <body>
+        <!--<div id="app">
+            <div>Vue and videojs</div>
+            <video-player :source="source" :vs="videosetting"></video-player>
+        </div>-->
+
+        <div id="app2">
+            <div>Vue and videojs</div>
+            <video-player :source="source" :vs="videosetting" :firstvideo="firstvideo"></video-player>
+        </div>
+
+        <template id="video-controller">
+            <div> Source : {{video_id}}</div>
+            <button @click="togglePlay">{{playToggle}}</button><br>
+            <input type="range" id="scrub-bar" :value="scrubPosition" @input="moveSlider" @mouseDown="startSlider" @mouseUp="stopSlider"><br>
+            <div>{{currentTime_m_s}}/{{duration_m_s}}</div>
+        </template>
+
+        <script type="text/javascript" src="./js/app2.js"></script>
+    </body>
+    
+</html>
