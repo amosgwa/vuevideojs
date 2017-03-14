@@ -20,7 +20,7 @@
 
         <template id="video-controller">
             <div> Source : {{video_id}}</div>
-            <button @click="togglePlay">{{playToggle}}</button><br>
+            <button v-on:click="playToggle">{{play_button}}</button><br>
             <input type="range" id="scrub-bar" :value="scrubPosition" @input="moveSlider" @mouseDown="startSlider" @mouseUp="stopSlider"><br>
             <div>{{currentTime_m_s}}/{{duration_m_s}}</div>
         </template>

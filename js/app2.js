@@ -1,9 +1,30 @@
 videojs.options.techOrder = ["html5", "flash", "youtube"]
 
+var videoController = Vue.extend({
+  data() {
+    return {
+      currentTime_m_s: "00:00",
+      duration_m_s: "00:00",
+      scrubPosition: "0",
+      currentTime_s: 0,
+      vid_idx: 0
+    }
+  },
+  props: ['curr_idx', 'play_button'],
+  template: '#video-controller',
+  ready() {
+    console.log('video controller ready', this.player)
+  },
+  methods: {
+    //play: this.player.play
+  }
+})
+
 var videoPlayer = Vue.extend({
   data() {
     return {
-      currIndex : 0 ,
+      currIndex: 0,
+      play_button_text: "Play"
     }
   },
   props : ['source', 'vs', 'firstvideo'],
@@ -16,7 +37,9 @@ var videoPlayer = Vue.extend({
         height='{{vs.videoHeight}}' 
         data-setup='{ }'>
           <source src='{{firstvideo.src}}' type='{{firstvideo.type}}'>
-      </video>`,
+      </video>
+      <video-controller :curr_idx='currIndex' :play_button='play_button_text'></video-player>
+      `,
   beforeCompile() {
    
   },
@@ -24,7 +47,7 @@ var videoPlayer = Vue.extend({
     // Create a videojs instance
     console.log("id",this.source.id)
     this.videoPlayer = videojs("main-video")
-    this.play(0, 20)
+    //this.play(0, 20)
   },
   methods : {
     play(idx, videoTime) {
@@ -34,10 +57,23 @@ var videoPlayer = Vue.extend({
         this.videoPlayer.currentTime(videoTime)
       }
       this.videoPlayer.play()
+      this.play_button_text = "Pause"
     },
     pause() {
       this.videoPlayer.pause()
+    },
+    playToggle() {
+      if(this.currPlayer.paused()){
+        this.currPlayer.play()
+        this.play_button_text = "Pause"
+      } else {
+        this.currPlayer.pause()
+        this.play_button_text = "Play"
+      }   
     }
+  },
+  components: {
+    'video-controller': videoController
   }
 })
 
