@@ -8,7 +8,7 @@ var videoController = Vue.extend({
       vc_currentTime_s: 0,
     }
   },
-  props: ['curr_idx', 'player', 'source', 'stats'],
+  props: ['curr_idx', 'player', 'source', 'stats', 'addlog'],
   template: '#video-controller',
   ready() {
   },
@@ -34,7 +34,16 @@ var videoController = Vue.extend({
       this.player.updateCurrentTime(Math.round((e.target.value/100) * this.stats.totalDuration_s))
     },
     endSlider(e) {
-      this.vc_currentTime_s = Math.round((e.target.value/100) * this.stats.totalDuration_s)
+      var new_time = Math.round((e.target.value/100) * this.stats.totalDuration_s)
+
+      // Event log
+      if( new_time > this.vc_currentTime_s) {
+        this.addlog("forward")
+      } else {
+        this.addlog("backward")
+      }
+
+      this.vc_currentTime_s = new_time
       var v = this.findIndex(this.vc_currentTime_s)
 
       this.player.play(v.idx, v.offset)
@@ -56,6 +65,8 @@ var videoController = Vue.extend({
         // Update the scrub bar value on stats change.
         this.scrub_position = Math.round(this.stats.currTime_s/this.stats.totalDuration_s * 100) + ""
         this.play_button_txt = this.stats.play_button_txt
+        
+        this.addlog("curr time changed" + this.stats.currTime_m_s)
       },
       deep: true
     }
@@ -91,7 +102,7 @@ var videoPlayer = Vue.extend({
         data-setup='{ }'>
           <source :src='firstvideo.src' :type='firstvideo.type'>
       </video>
-      <video-controller :curr_idx='currIndex' :player='player' :source='source' :stats='stats'></video-player>
+      <video-controller :curr_idx='currIndex' :player='player' :source='source' :stats='stats' :addlog='addlog'></video-player>
       `,
   beforeCompile() {
 
@@ -102,7 +113,7 @@ var videoPlayer = Vue.extend({
   ready() {
     // Create a videojs instance
     this.videoPlayer = videojs("main-video")
-
+    this.addlog("ready")
   },
   methods: {
     play(idx, videoTime) {
@@ -131,6 +142,7 @@ var videoPlayer = Vue.extend({
           self.offListener('timeupdate')
           self.reset()          
           self.addlog("ended")
+          self.addlog("ready")
         }
         // Remove the listener after each video has ended.
         self.offListener('timeupdate')
@@ -228,8 +240,5 @@ new Vue({
   }
 })
 
-  // (a) video is ready
-  // (c) user has seeked forward/backward in the video
-  // (d) video source has changed
   // (f) video current time has changed (with current time)
   // (g) video duration, when available
