@@ -6,6 +6,7 @@ var videoController = Vue.extend({
       scrub_position: "0",
       play_button_txt: "Play",
       vc_currentTime_s: 0,
+      vc_currentTime_m_s: "0:00"
     }
   },
   props: ['curr_idx', 'player', 'source', 'stats', 'addlog'],
@@ -65,10 +66,13 @@ var videoController = Vue.extend({
         // Update the scrub bar value on stats change.
         this.scrub_position = Math.round(this.stats.currTime_s/this.stats.totalDuration_s * 100) + ""
         this.play_button_txt = this.stats.play_button_txt
-        
-        this.addlog("curr time changed" + this.stats.currTime_m_s)
+        console.log("looping")
+        this.vc_currentTime_m_s = this.stats.currTime_m_s
       },
       deep: true
+    },
+    vc_currentTime_m_s() {
+      this.addlog("current time changed " + this.stats.currTime_m_s)
     }
   }
 })
@@ -86,7 +90,7 @@ var videoPlayer = Vue.extend({
       },
       stats: {
         currTime_s: 0,
-        currTime_m_s: "00:00",
+        currTime_m_s: "0:00",
         totalDuration_s: this.vs.totalDuration,
         totalDuration_m_s: videojs.formatTime(this.vs.totalDuration),
         play_button_txt: "Play"
@@ -114,6 +118,7 @@ var videoPlayer = Vue.extend({
     // Create a videojs instance
     this.videoPlayer = videojs("main-video")
     this.addlog("ready")
+    this.addlog("duration "+this.stats.totalDuration_m_s)
   },
   methods: {
     play(idx, videoTime) {
@@ -133,6 +138,7 @@ var videoPlayer = Vue.extend({
       })
       // Automatically play next on end.
       self.videoPlayer.on('ended', function(){
+        self.addlog("")
         self.currIndex += 1
         if(self.currIndex < self.source.videos.length){
           self.play(self.currIndex, 0)
@@ -143,9 +149,9 @@ var videoPlayer = Vue.extend({
           self.reset()          
           self.addlog("ended")
           self.addlog("ready")
+          self.addlog("duration "+self.stats.totalDuration_m_s)
         }
         // Remove the listener after each video has ended.
-        self.offListener('timeupdate')
         self.offListener('ended')
       })
       this.addlog("playing")
@@ -239,6 +245,3 @@ new Vue({
     'video-player': videoPlayer
   }
 })
-
-  // (f) video current time has changed (with current time)
-  // (g) video duration, when available
