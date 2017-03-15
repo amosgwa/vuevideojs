@@ -31,7 +31,7 @@ var videoController = Vue.extend({
       this.player.pause()
       // Removing listeners on every interaction.
       this.player.offListener('ended')
-      //this.player.offListener('timeupdate')
+      this.player.offListener('timeupdate')
     },
     sliding(e) {
       console.log("sliding")
@@ -53,6 +53,7 @@ var videoController = Vue.extend({
           return {"idx": i, "offset": time_s - v.start + (1 && (i != 0))}
         }
       }
+      console.log("finding index")
       return {"idx": this.curr_idx, "offset": time_s - this.source.videos[this.curr_idx].start + (1 && (this.curr_idx != 0))}
     }
   },

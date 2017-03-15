@@ -21,7 +21,7 @@
         <template id="video-controller">
             <div>Source : {{this.source.videos[this.curr_idx] ? this.source.videos[this.curr_idx].src : "The End"}}</div>
             <button @click="togglePlay">{{play_button_txt}}</button><br>
-            <input type="range" id="scrub-bar" :value='scrub_position' @mouseDown="startSlider" @input="sliding" @mouseUp="endSlider"><br>
+            <input type="range" id="scrub-bar" :value='scrub_position' @mouseDown="startSlider" @input="sliding" @mouseUp="endSlider" @click="clickSlider"><br>
             <div>{{stats.currTime_m_s}}/{{stats.totalDuration_m_s}}</div>
         </template>
 
