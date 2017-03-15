@@ -43,13 +43,13 @@ var videoController = Vue.extend({
       } else {
         this.addlog("backward")
       }
-
+      // Find the source of the current time.
       this.vc_currentTime_s = new_time
       var v = this.findIndex(this.vc_currentTime_s)
-
       this.player.play(v.idx, v.offset)
     },
     findIndex(time_s) {
+      // Find the video whose range of time contains the current time_s.
       // Can be optimized with map.
       for(var i = 0; i < this.source.videos.length; i++) {
         var v = this.source.videos[i]
@@ -66,7 +66,6 @@ var videoController = Vue.extend({
         // Update the scrub bar value on stats change.
         this.scrub_position = Math.round(this.stats.currTime_s/this.stats.totalDuration_s * 100) + ""
         this.play_button_txt = this.stats.play_button_txt
-        console.log("looping")
         this.vc_currentTime_m_s = this.stats.currTime_m_s
       },
       deep: true
@@ -108,12 +107,6 @@ var videoPlayer = Vue.extend({
       </video>
       <video-controller :curr_idx='currIndex' :player='player' :source='source' :stats='stats' :addlog='addlog'></video-player>
       `,
-  beforeCompile() {
-
-  },
-  compiled(){
-
-  },
   ready() {
     // Create a videojs instance
     this.videoPlayer = videojs("main-video")
@@ -132,13 +125,13 @@ var videoPlayer = Vue.extend({
         this.addlog("src changed")
       }
       // Listen on the time update.
+      // This will update the location of the stub on the scrub bar.
       self.videoPlayer.on('timeupdate', function(){
         self.stats.currTime_s = this.currentTime() + self.source.videos[self.currIndex].start - (1 && (self.currIndex != 0))
         self.stats.currTime_m_s = videojs.formatTime(self.stats.currTime_s)
       })
       // Automatically play next on end.
       self.videoPlayer.on('ended', function(){
-        self.addlog("")
         self.currIndex += 1
         if(self.currIndex < self.source.videos.length){
           self.play(self.currIndex, 0)
@@ -163,15 +156,15 @@ var videoPlayer = Vue.extend({
       this.videoPlayer.pause()
       this.stats.play_button_txt = "Play"
     },
+    updateCurrentTime_s(time) {
+      this.stats.currTime_s = time
+      this.stats.currTime_m_s = videojs.formatTime(this.stats.currTime_s)
+    },
     isPaused() {
       return this.videoPlayer.paused()
     },
     offListener(e){
       this.videoPlayer.off(e)
-    },
-    updateCurrentTime_s(time) {
-      this.stats.currTime_s = time
-      this.stats.currTime_m_s = videojs.formatTime(this.stats.currTime_s)
     },
     reset(){
       this.currIndex = 0
@@ -179,6 +172,9 @@ var videoPlayer = Vue.extend({
       this.stats.currTime_s = 0,
       this.stats.currTime_m_s = "00:00",
       this.stats.play_button_txt = "Play"
+
+      this.videoPlayer.pause()
+      this.videoPlayer.src(this.source.videos[this.currIndex])
     }
   },
   components: {
@@ -203,13 +199,13 @@ new Vue({
         type: 'video/youtube',
         duration: 30
       }, {
+        src: 'https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8',
+        type: 'application/x-mpegURL',
+        duration: 1800
+      }, {
         src: 'http://vjs.zencdn.net/v/oceans.mp4',
         type: 'video/mp4',
         duration: 46
-      }, {
-        src: 'https://www.youtube.com/watch?v=7CVtTOpgSyY',
-        type: 'video/youtube',
-        duration: 30
       }]
     },    
     firstvideo : { },
