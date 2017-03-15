@@ -57,17 +57,17 @@ var videoController = Vue.extend({
     }
   },
   watch: {
-    curr_idx() {
-      console.log("curr_idx_watch", this.curr_idx)
-      // The video has ended, and src has changed to a new one.
-      // Only play it if the curr_idx is less than the available sources.
-      if(this.curr_idx < this.source.videos.length){
-        console.log("source has changed", this.curr_idx)
-        this.player.play(this.curr_idx, 0)
-      } else if(this.curr_idx >= this.source.videos.length) {
-        this.player.offListener('timeupdate')
-      }
-    },
+    // curr_idx() {
+    //   console.log("curr_idx_watch", this.curr_idx)
+    //   // The video has ended, and src has changed to a new one.
+    //   // Only play it if the curr_idx is less than the available sources.
+    //   if(this.curr_idx < this.source.videos.length){
+    //     console.log("source has changed", this.curr_idx)
+    //     this.player.play(this.curr_idx, 0)
+    //   } else if(this.curr_idx >= this.source.videos.length) {
+    //     this.player.offListener('timeupdate')
+    //   }
+    // },
     stats: {
       handler() {
         //console.log("stat has changed")
@@ -130,7 +130,7 @@ var videoPlayer = Vue.extend({
       console.log("Playing",idx,videoTime)
       var self = this
       if (idx != undefined && videoTime != undefined) {
-        //this.currIndex = idx
+        this.currIndex = idx
         this.videoPlayer.pause()
         this.videoPlayer.src(this.source.videos[idx])
         this.videoPlayer.currentTime(videoTime)
@@ -144,6 +144,12 @@ var videoPlayer = Vue.extend({
       self.videoPlayer.on('ended', function(){
         self.currIndex += 1
         console.log("adding 1 to next")
+        if(self.currIndex < self.source.videos.length){
+          console.log("source has changed", self.currIndex)
+          self.play(self.currIndex, 0)
+        } else if(self.currIndex >= self.source.videos.length) {
+          self.offListener('timeupdate')
+        }
         // Remove the listener after each video has ended.
         self.offListener('ended')
       })
