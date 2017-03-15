@@ -22,7 +22,7 @@
             <div>Source : {{video_src}}</div>
             <button @click="togglePlay">{{play_button_txt}}</button><br>
             <input type="range" id="scrub-bar" value=0><br>
-            <div>{{currentTime_m_s}}/{{duration_m_s}}</div>
+            <div>{{stats.currTime_m_s}}/{{stats.totalDuration_m_s}}</div>
         </template>
 
         <script type="text/javascript" src="./js/app2.js"></script>

@@ -11,10 +11,10 @@ var videoController = Vue.extend({
       video_src: this.getVideoSrc()
     }
   },
-  props: ['curr_idx', 'player', 'source'],
+  props: ['curr_idx', 'player', 'source', 'stats'],
   template: '#video-controller',
   ready() {
-
+    console.log("ready controller")
   },
   methods: {
     togglePlay() {
@@ -39,6 +39,12 @@ var videoController = Vue.extend({
         this.video_src = this.getVideoSrc()
         this.player.play(this.curr_idx, 0)
       }
+    },
+    stats: {
+      handler() {
+        console.log("stat has changed")
+      },
+      deep: true
     }
   }
 })
@@ -51,7 +57,14 @@ var videoPlayer = Vue.extend({
         play: this.play,
         pause: this.pause,
         isPaused: this.isPaused
-      }
+      },
+      stats: {
+        currTime_s: 0,
+        currTime_m_s: "00:00",
+        totalDuration_s: this.vs.totalDuration,
+        totalDuration_m_s: videojs.formatTime(this.vs.totalDuration)
+      },
+      currTime : 0
     }
   },
   props: ['source', 'vs', 'firstvideo'],
@@ -65,16 +78,19 @@ var videoPlayer = Vue.extend({
         data-setup='{ }'>
           <source :src='firstvideo.src' :type='firstvideo.type'>
       </video>
-      <video-controller :curr_idx='currIndex' :player='player' :source='source'></video-player>
+      <video-controller :curr_idx='currIndex' :player='player' :source='source' :stats='stats'></video-player>
       `,
   beforeCompile() {
+
+  },
+  compiled(){
 
   },
   ready() {
     // Create a videojs instance
     //console.log("id",this.source.id)
     this.videoPlayer = videojs("main-video")
-
+    console.log("ready player")
     this.play(0, 29)
   },
   methods: {
@@ -85,6 +101,12 @@ var videoPlayer = Vue.extend({
         this.videoPlayer.src(this.source.videos[idx])
         this.videoPlayer.currentTime(videoTime)
       }
+      // Listen on the time update.
+      self.videoPlayer.on('timeupdate', function(){
+        self.stats.currTime_s = this.currentTime()
+        self.stats.currTime_m_s = videojs.formatTime(this.currentTime())
+      })
+      // Automatically play next on end.
       self.videoPlayer.on('ended', function(){
         self.currIndex += 1
         // Remove the listener after each video has ended.
@@ -149,7 +171,6 @@ new Vue({
         this.source.videos[i].end = prev_duration + this.source.videos[i].duration
         prev_duration = this.videosetting.totalDuration
       }
-      console.log(this.source.videos)
     }
   },
   components: {
