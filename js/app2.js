@@ -3,12 +3,9 @@ videojs.options.techOrder = ["html5", "flash", "youtube"]
 var videoController = Vue.extend({
   data() {
     return {
-      currentTime_m_s: "00:00",
-      duration_m_s: "00:00",
-      scrubPosition: "0",
+      scrub_position: "0",
       play_button_txt: "play",
       currentTime_s: 0,
-      video_src: this.getVideoSrc()
     }
   },
   props: ['curr_idx', 'player', 'source', 'stats'],
@@ -36,13 +33,17 @@ var videoController = Vue.extend({
       // Only play it if the curr_idx is less than the available sources.
       if(this.curr_idx < this.source.videos.length){
         console.log("source has changed", this.curr_idx)
-        this.video_src = this.getVideoSrc()
         this.player.play(this.curr_idx, 0)
+      } else {
+        this.player.offListener('timeupdate')
       }
     },
     stats: {
       handler() {
         console.log("stat has changed")
+        // Update the scrub bar value on stats change.
+        this.scrub_position = this.stats.currTime_s/this.stats.totalDuration_s * 100 + ""
+        console.log(this.scrub_position)
       },
       deep: true
     }
@@ -56,7 +57,8 @@ var videoPlayer = Vue.extend({
       player: {
         play: this.play,
         pause: this.pause,
-        isPaused: this.isPaused
+        isPaused: this.isPaused,
+        offListener: this.offListener
       },
       stats: {
         currTime_s: 0,
@@ -103,14 +105,14 @@ var videoPlayer = Vue.extend({
       }
       // Listen on the time update.
       self.videoPlayer.on('timeupdate', function(){
-        self.stats.currTime_s = this.currentTime()
-        self.stats.currTime_m_s = videojs.formatTime(this.currentTime())
+        self.stats.currTime_s = this.currentTime() + self.source.videos[self.currIndex].start
+        self.stats.currTime_m_s = videojs.formatTime(self.stats.currTime_s)
       })
       // Automatically play next on end.
       self.videoPlayer.on('ended', function(){
         self.currIndex += 1
         // Remove the listener after each video has ended.
-        this.off('ended')
+        self.offListener('ended')
       })
       this.videoPlayer.play()
     },
@@ -119,6 +121,9 @@ var videoPlayer = Vue.extend({
     },
     isPaused() {
       return this.videoPlayer.paused()
+    },
+    offListener(e){
+      this.videoPlayer.off(e)
     }
   },
   components: {
@@ -167,7 +172,7 @@ new Vue({
       // Calculate the start and end of all the videos.
       for (var i = 0; i < this.source.videos.length; i++) {
         this.videosetting.totalDuration += this.source.videos[i].duration
-        this.source.videos[i].start = prev_duration + (1 && (i != 0))
+        this.source.videos[i].start = prev_duration //+ (1 && (i != 0))
         this.source.videos[i].end = prev_duration + this.source.videos[i].duration
         prev_duration = this.videosetting.totalDuration
       }
