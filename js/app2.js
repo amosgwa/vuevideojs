@@ -5,7 +5,7 @@ var videoController = Vue.extend({
     return {
       scrub_position: "0",
       play_button_txt: "play",
-      currentTime_s: 0,
+      vc_currentTime_s: 0
     }
   },
   props: ['curr_idx', 'player', 'source', 'stats'],
@@ -25,25 +25,55 @@ var videoController = Vue.extend({
     },
     getVideoSrc() {
       return this.source.videos[this.curr_idx].src
+    },
+    startSlider() {
+      console.log("mouse entered")
+      this.player.pause()
+      // Removing listeners on every interaction.
+      this.player.offListener('ended')
+      //this.player.offListener('timeupdate')
+    },
+    sliding(e) {
+      console.log("sliding")
+      this.vc_currentTime_s = Math.round((e.target.value/100) * this.stats.totalDuration_s)
+    },
+    endSlider(e) {
+      console.log("mouse released")
+      this.vc_currentTime_s = Math.round((e.target.value/100) * this.stats.totalDuration_s)
+      console.log("VC current time", this.vc_currentTime_s)
+      console.log(e.target.value) 
+      var v = this.findIndex(this.vc_currentTime_s)
+      console.log("v_idx", v)
+      this.player.play(v.idx, v.offset)
+    },
+    findIndex(time_s) {
+      for(var i = 0; i < this.source.videos.length; i++) {
+        var v = this.source.videos[i]
+        if( time_s >= v.start && time_s <= v.end ) {
+          return {"idx": i, "offset": time_s - v.start + (1 && (i != 0))}
+        }
+      }
+      return {"idx": this.curr_idx, "offset": time_s - this.source.videos[this.curr_idx].start + (1 && (this.curr_idx != 0))}
     }
   },
   watch: {
     curr_idx() {
+      console.log("curr_idx_watch", this.curr_idx)
       // The video has ended, and src has changed to a new one.
       // Only play it if the curr_idx is less than the available sources.
       if(this.curr_idx < this.source.videos.length){
         console.log("source has changed", this.curr_idx)
         this.player.play(this.curr_idx, 0)
-      } else {
+      } else if(this.curr_idx >= this.source.videos.length) {
         this.player.offListener('timeupdate')
       }
     },
     stats: {
       handler() {
-        console.log("stat has changed")
+        //console.log("stat has changed")
         // Update the scrub bar value on stats change.
         this.scrub_position = this.stats.currTime_s/this.stats.totalDuration_s * 100 + ""
-        console.log(this.scrub_position)
+        //console.log(this.scrub_position)
       },
       deep: true
     }
@@ -93,24 +123,27 @@ var videoPlayer = Vue.extend({
     //console.log("id",this.source.id)
     this.videoPlayer = videojs("main-video")
     console.log("ready player")
-    this.play(0, 29)
+    //this.play(0, 29)
   },
   methods: {
     play(idx, videoTime) {
+      console.log("Playing",idx,videoTime)
       var self = this
       if (idx != undefined && videoTime != undefined) {
+        //this.currIndex = idx
         this.videoPlayer.pause()
         this.videoPlayer.src(this.source.videos[idx])
         this.videoPlayer.currentTime(videoTime)
       }
       // Listen on the time update.
       self.videoPlayer.on('timeupdate', function(){
-        self.stats.currTime_s = this.currentTime() + self.source.videos[self.currIndex].start
+        self.stats.currTime_s = this.currentTime() + self.source.videos[self.currIndex].start - (1 && (self.currIndex != 0))
         self.stats.currTime_m_s = videojs.formatTime(self.stats.currTime_s)
       })
       // Automatically play next on end.
       self.videoPlayer.on('ended', function(){
         self.currIndex += 1
+        console.log("adding 1 to next")
         // Remove the listener after each video has ended.
         self.offListener('ended')
       })
@@ -172,9 +205,10 @@ new Vue({
       // Calculate the start and end of all the videos.
       for (var i = 0; i < this.source.videos.length; i++) {
         this.videosetting.totalDuration += this.source.videos[i].duration
-        this.source.videos[i].start = prev_duration //+ (1 && (i != 0))
+        this.source.videos[i].start = prev_duration + (1 && (i != 0))
         this.source.videos[i].end = prev_duration + this.source.videos[i].duration
         prev_duration = this.videosetting.totalDuration
+        console.log(this.source.videos[i])
       }
     }
   },
