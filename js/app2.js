@@ -11,7 +11,7 @@ var videoController = Vue.extend({
       video_src: this.getVideoSrc()
     }
   },
-  props: ['curr_idx', 'player'],
+  props: ['curr_idx', 'player', 'source'],
   template: '#video-controller',
   ready() {
 
@@ -27,14 +27,18 @@ var videoController = Vue.extend({
       }
     },
     getVideoSrc() {
-      return this.player.getSourceFromIdx(this.curr_idx).src
+      return this.source.videos[this.curr_idx].src
     }
   },
   watch: {
     curr_idx() {
       // The video has ended, and src has changed to a new one.
-      console.log("source has changed", this.curr_idx)
-      this.video_src = this.getVideoSrc()
+      // Only play it if the curr_idx is less than the available sources.
+      if(this.curr_idx < this.source.videos.length){
+        console.log("source has changed", this.curr_idx)
+        this.video_src = this.getVideoSrc()
+        this.player.play(this.curr_idx, 0)
+      }
     }
   }
 })
@@ -46,8 +50,7 @@ var videoPlayer = Vue.extend({
       player: {
         play: this.play,
         pause: this.pause,
-        isPaused: this.isPaused,
-        getSourceFromIdx: this.getSourceFromIdx
+        isPaused: this.isPaused
       }
     }
   },
@@ -62,7 +65,7 @@ var videoPlayer = Vue.extend({
         data-setup='{ }'>
           <source :src='firstvideo.src' :type='firstvideo.type'>
       </video>
-      <video-controller :curr_idx='currIndex' :player='player' ></video-player>
+      <video-controller :curr_idx='currIndex' :player='player' :source='source'></video-player>
       `,
   beforeCompile() {
 
@@ -82,6 +85,11 @@ var videoPlayer = Vue.extend({
         this.videoPlayer.src(this.source.videos[idx])
         this.videoPlayer.currentTime(videoTime)
       }
+      self.videoPlayer.on('ended', function(){
+        self.currIndex += 1
+        // Remove the listener after each video has ended.
+        this.off('ended')
+      })
       this.videoPlayer.play()
     },
     pause() {
@@ -89,9 +97,6 @@ var videoPlayer = Vue.extend({
     },
     isPaused() {
       return this.videoPlayer.paused()
-    },
-    getSourceFromIdx(idx) {
-      return this.source.videos[idx]
     }
   },
   components: {
