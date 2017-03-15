@@ -1,3 +1,8 @@
+body {
+  color: #666;
+  font-family: OpenSans;
+}
+
 h1,
 h2 {
   font-weight: normal;
@@ -26,9 +31,54 @@ a {
 }
 
 #app, #app2 {
-  text-align: center;
+  width: 350px;
+  margin: 0 auto;
 }
 
 #scrub-bar {
   width: 350px;
+}
+
+#log {
+  width: 350px;
+  height: 250px;
+  border: 1px solid #ccc;
+  margin: 0 auto;
+  overflow-y: scroll;
+}
+
+#log_container {
+  margin-top: 30px;
+}
+
+.log_msg {
+  border-bottom: 1px solid #ccc;
+  padding: 5px;
+  text-align: left;
+  font-size: 12px;
+}
+
+#play-button {
+  border: 1px solid #ccc;
+  font-size: 12px;
+  float: left;
+  width: 50px;
+  margin-right: 10px;
+}
+
+#scrub-bar {
+  float: left;
+  width: 215px;
+  border: 1px solid #ccc;
+  margin-right: 10px;
+}
+
+#time-stamp {
+  font-size: 12px; 
+  padding-top: 2px;
+  float: left;
+}
+
+.clear {
+  clear: both;
 }

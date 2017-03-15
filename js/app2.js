@@ -4,8 +4,8 @@ var videoController = Vue.extend({
   data() {
     return {
       scrub_position: "0",
-      play_button_txt: "play",
-      vc_currentTime_s: 0
+      play_button_txt: "Play",
+      vc_currentTime_s: 0,
     }
   },
   props: ['curr_idx', 'player', 'source', 'stats'],
@@ -16,31 +16,31 @@ var videoController = Vue.extend({
     togglePlay() {
       if (this.player.isPaused()) {
         this.player.play()
-        this.play_button_txt = "Pause"
       } else {
         this.player.pause()
-        this.play_button_txt = "Play"
       }
     },
     getVideoSrc() {
       return this.source.videos[this.curr_idx].src
     },
     startSlider() {
-      this.player.pause()
-      // Removing listeners on every interaction.
+      // Removing listeners on interaction.
       this.player.offListener('ended')
       this.player.offListener('timeupdate')
+      this.player.pause()
     },
     sliding(e) {
+      // Update the time stamp as the user scrolls.
       this.player.updateCurrentTime(Math.round((e.target.value/100) * this.stats.totalDuration_s))
-      //this.vc_currentTime_s = Math.round((e.target.value/100) * this.stats.totalDuration_s)
     },
     endSlider(e) {
       this.vc_currentTime_s = Math.round((e.target.value/100) * this.stats.totalDuration_s)
       var v = this.findIndex(this.vc_currentTime_s)
+
       this.player.play(v.idx, v.offset)
     },
     findIndex(time_s) {
+      // Can be optimized with map.
       for(var i = 0; i < this.source.videos.length; i++) {
         var v = this.source.videos[i]
         if( time_s >= v.start && time_s <= v.end ) {
@@ -55,6 +55,7 @@ var videoController = Vue.extend({
       handler() {
         // Update the scrub bar value on stats change.
         this.scrub_position = Math.round(this.stats.currTime_s/this.stats.totalDuration_s * 100) + ""
+        this.play_button_txt = this.stats.play_button_txt
       },
       deep: true
     }
@@ -76,12 +77,12 @@ var videoPlayer = Vue.extend({
         currTime_s: 0,
         currTime_m_s: "00:00",
         totalDuration_s: this.vs.totalDuration,
-        totalDuration_m_s: videojs.formatTime(this.vs.totalDuration)
-      },
-      currTime : 0
+        totalDuration_m_s: videojs.formatTime(this.vs.totalDuration),
+        play_button_txt: "Play"
+      }
     }
   },
-  props: ['source', 'vs', 'firstvideo'],
+  props: ['source', 'vs', 'firstvideo', 'addlog'],
   template: `<video       
         :id='source.id' 
         class='video-js vjs-big-play-centered' 
@@ -101,6 +102,7 @@ var videoPlayer = Vue.extend({
   ready() {
     // Create a videojs instance
     this.videoPlayer = videojs("main-video")
+
   },
   methods: {
     play(idx, videoTime) {
@@ -110,6 +112,8 @@ var videoPlayer = Vue.extend({
         this.videoPlayer.pause()
         this.videoPlayer.src(this.source.videos[idx])
         this.videoPlayer.currentTime(videoTime)
+
+        this.addlog("src changed")
       }
       // Listen on the time update.
       self.videoPlayer.on('timeupdate', function(){
@@ -122,16 +126,24 @@ var videoPlayer = Vue.extend({
         if(self.currIndex < self.source.videos.length){
           self.play(self.currIndex, 0)
         } else if(self.currIndex >= self.source.videos.length) {
+          // This is the end of the video.
           // Remove timeupdate listener to stop time update at end.
           self.offListener('timeupdate')
+          self.reset()          
+          self.addlog("ended")
         }
         // Remove the listener after each video has ended.
+        self.offListener('timeupdate')
         self.offListener('ended')
       })
+      this.addlog("playing")
       this.videoPlayer.play()
+      this.stats.play_button_txt = "Pause"
     },
     pause() {
+      this.addlog("paused")
       this.videoPlayer.pause()
+      this.stats.play_button_txt = "Play"
     },
     isPaused() {
       return this.videoPlayer.paused()
@@ -142,6 +154,13 @@ var videoPlayer = Vue.extend({
     updateCurrentTime_s(time) {
       this.stats.currTime_s = time
       this.stats.currTime_m_s = videojs.formatTime(this.stats.currTime_s)
+    },
+    reset(){
+      this.currIndex = 0
+      this.stats.currTime_s = 0
+      this.stats.currTime_s = 0,
+      this.stats.currTime_m_s = "00:00",
+      this.stats.play_button_txt = "Play"
     }
   },
   components: {
@@ -174,8 +193,10 @@ new Vue({
         type: 'video/youtube',
         duration: 30
       }]
-    },
-    firstvideo: {}
+    },    
+    firstvideo : { },
+    log: "",
+    log_count: 0
   },
   beforeCompile() {
     // Generate start and end time for all videos.
@@ -193,9 +214,22 @@ new Vue({
         this.source.videos[i].end = prev_duration + this.source.videos[i].duration
         prev_duration = this.videosetting.totalDuration
       }
+    },
+    addlog(msg) {
+      this.log_count += 1
+      var wrapper = `
+        <div class="log_msg">${this.log_count} :: ${msg}</div>
+      `      
+      this.log = wrapper + this.log
     }
   },
   components: {
     'video-player': videoPlayer
   }
 })
+
+  // (a) video is ready
+  // (c) user has seeked forward/backward in the video
+  // (d) video source has changed
+  // (f) video current time has changed (with current time)
+  // (g) video duration, when available

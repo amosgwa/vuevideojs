@@ -15,14 +15,17 @@
 
         <div id="app2">
             <div>Vue and videojs</div>
-            <video-player :source="source" :vs="videosetting" :firstvideo="firstvideo"></video-player>
+            <video-player :source="source" :vs="videosetting" :firstvideo="firstvideo" :addlog="addlog"></video-player>
+            
+            <div id="log_container">Event Logs</div>
+            <div id="log">{{{log}}}</div>
         </div>
 
         <template id="video-controller">
-            <div>Source : {{this.source.videos[this.curr_idx] ? this.source.videos[this.curr_idx].src : "The End"}}</div>
-            <button @click="togglePlay">{{play_button_txt}}</button><br>
-            <input type="range" id="scrub-bar" :value='scrub_position' @mouseDown="startSlider" @input="sliding" @mouseUp="endSlider" @click="clickSlider"><br>
-            <div>{{stats.currTime_m_s}}/{{stats.totalDuration_m_s}}</div>
+            <button @click="togglePlay" id='play-button'>{{play_button_txt}}</button>
+            <input type="range" id="scrub-bar" :value='scrub_position' @mouseDown="startSlider" @input="sliding" @mouseUp="endSlider">
+            <span id="time-stamp">{{stats.currTime_m_s}}/{{stats.totalDuration_m_s}}</span>
+            <div class="clear"></div>
         </template>
 
         <script type="text/javascript" src="./js/app2.js"></script>
