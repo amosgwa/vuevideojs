@@ -35,7 +35,8 @@ var videoController = Vue.extend({
     },
     sliding(e) {
       console.log("sliding")
-      this.vc_currentTime_s = Math.round((e.target.value/100) * this.stats.totalDuration_s)
+      this.player.updateCurrentTime(Math.round((e.target.value/100) * this.stats.totalDuration_s))
+      //this.vc_currentTime_s = Math.round((e.target.value/100) * this.stats.totalDuration_s)
     },
     endSlider(e) {
       console.log("mouse released")
@@ -73,7 +74,7 @@ var videoController = Vue.extend({
       handler() {
         //console.log("stat has changed")
         // Update the scrub bar value on stats change.
-        this.scrub_position = this.stats.currTime_s/this.stats.totalDuration_s * 100 + ""
+        this.scrub_position = Math.round(this.stats.currTime_s/this.stats.totalDuration_s * 100) + ""
         //console.log(this.scrub_position)
       },
       deep: true
@@ -89,7 +90,8 @@ var videoPlayer = Vue.extend({
         play: this.play,
         pause: this.pause,
         isPaused: this.isPaused,
-        offListener: this.offListener
+        offListener: this.offListener,
+        updateCurrentTime: this.updateCurrentTime_s
       },
       stats: {
         currTime_s: 0,
@@ -164,6 +166,10 @@ var videoPlayer = Vue.extend({
     },
     offListener(e){
       this.videoPlayer.off(e)
+    },
+    updateCurrentTime_s(time) {
+      this.stats.currTime_s = time
+      this.stats.currTime_m_s = videojs.formatTime(this.stats.currTime_s)
     }
   },
   components: {
